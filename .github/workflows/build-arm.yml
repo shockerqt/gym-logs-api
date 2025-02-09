@@ -12,19 +12,14 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Instalar Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-unknown-linux-gnu
+      - name: Instalar cross
+        run: cargo install cross
 
-      - name: Instalar compilador cruzado
-        run: sudo apt update && sudo apt install -y gcc-aarch64-linux-gnu
-
-      - name: Compilar para ARM64
-        run: cargo build --target=aarch64-unknown-linux-gnu --release
+      - name: Compilar con cross para ARM64
+        run: cross build --target=aarch64-unknown-linux-gnu --release
 
       - name: Subir binario como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: binario-arm
-          path: target/aarch64-unknown-linux-gnu/release/tu_programa
+          path: target/aarch64-unknown-linux-gnu/release/gym-logs-api
