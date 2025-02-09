@@ -42,7 +42,10 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Subir binario al servidor
-        run: scp ./deploy/gym-logs-api ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/opt/gym-logs-api
+        run: scp ./deploy/gym-logs-api ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/gym-logs-api
+
+      - name: Mover binario a /opt y dar permisos
+        run: ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo mv /home/${{ secrets.SERVER_USER }}/gym-logs-api /opt/gym-logs-api && sudo chmod +x /opt/gym-logs-api"
 
       - name: Reiniciar servicio en el servidor
         run: ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl restart gym-logs-api"
