@@ -1,13 +1,13 @@
-name: Build Rust for ARM (OCI)
+name: Build & Deploy Rust for ARM (OCI)
 
 on:
   push:
     branches:
-      - main # Se ejecuta cuando subes cambios a main
+      - main
 
 jobs:
   build-arm:
-    runs-on: ubuntu-latest # Corre en una máquina x86_64
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -23,3 +23,26 @@ jobs:
         with:
           name: binario-arm
           path: target/aarch64-unknown-linux-gnu/release/gym-logs-api
+
+  deploy:
+    needs: build-arm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar binario compilado
+        uses: actions/download-artifact@v4
+        with:
+          name: binario-arm
+          path: ./deploy
+
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Subir binario al servidor
+        run: scp ./deploy/gym-logs-api ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/opt/gym-logs-api
+
+      - name: Reiniciar servicio en el servidor
+        run: ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl restart gym-logs-api"
